@@ -1,14 +1,15 @@
 package repository
 
 import (
-	"testing"
 	"fmt"
-	"github.com/neocxf/go-exercises/bookcase/models"
 	"log"
+	"testing"
+
+	"github.com/neocxf/go-exercises/bookcase/models"
 )
 
 var (
-	instance SQL
+	instance      SQL
 	closeDbHandle func()
 )
 
@@ -16,12 +17,14 @@ func init() {
 
 	instance = SQL{}
 
-	closeDbHandle = instance.Open(`root:derbysoft@/dplatform_rtd?charset=utf8`)
+	closeDbHandle = instance.Open("sqlite3", `sqlite.db`)
+
+	instance.InitSchema()
 
 }
 
 func TestCreateUser(t *testing.T) {
-	t.SkipNow()
+	// t.SkipNow()
 
 	defer func() {
 		fmt.Println("althrough the test case failed, this line should still appear...")
@@ -30,10 +33,9 @@ func TestCreateUser(t *testing.T) {
 			fmt.Println("recovered in f", r)
 		}
 
-		defer instance.Close()
+		//defer instance.Close()
 
 	}()
-
 
 	log.SetPrefix("bookcase ==> ")
 
@@ -54,12 +56,11 @@ func TestCreateUsers(t *testing.T) {
 
 	users := make([]*models.User, 5)
 
-	for i:= range users {
+	for i := range users {
 		name := fmt.Sprintf("%s%d", "fei", i)
 
 		users = append(users, &models.User{Name: name})
 	}
-
 
 	err := instance.CreateUsers(users)
 
@@ -94,6 +95,8 @@ func TestSelectUser(t *testing.T) {
 }
 
 func TestThrowErrors(t *testing.T) {
+	t.SkipNow()
+
 	defer func() {
 
 		if r := recover(); r != nil {
@@ -111,7 +114,7 @@ func TestThrowErrors(t *testing.T) {
 }
 
 func BenchmarkHello(b *testing.B) {
-	for i := 0; i < b.N; i ++ {
+	for i := 0; i < b.N; i++ {
 		fmt.Println(fmt.Sprintf("hello"))
 	}
 }
