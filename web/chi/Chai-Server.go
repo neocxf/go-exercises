@@ -1,10 +1,11 @@
+
 package main
 
 import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
-	"github.com/neocxf/go-exercises/web/todo"
+	"github.com/neocxf/go-exercises/web/chi/todo"
 	"log"
 	"net/http"
 )
