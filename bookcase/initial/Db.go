@@ -21,7 +21,7 @@ type SQLInstance struct {
 }
 
 //// Open returns a DB reference for a data source.
-func (s *SQLInstance) Open(dataSourceName string) (disconnect func()) {
+func (s *SQLInstance) Open(driverName, dataSourceName string) (disconnect func()) {
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		fmt.Printf(err.Error())
