@@ -8,3 +8,5 @@
 5. [How to write high-performance code in Golang using Go-Routines](https://medium.com/@vigneshsk/how-to-write-high-performance-code-in-golang-using-go-routines-227edf979c3c)
 6. [An introduction to using and visualizing channels in Go](https://www.sohamkamani.com/blog/2017/08/24/golang-channels-explained/)
 7. [Unbounded Queue: A tale of premature optimization](http://www.golangdevops.com/2017/12/29/unbounded-queue/)
+8. [golang pipeline](https://www.youtube.com/watch?v=sCTSa6NwDhU)
+9. [pipeline official resource](https://blog.golang.org/pipelines)
