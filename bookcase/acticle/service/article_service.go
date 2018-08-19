@@ -21,6 +21,7 @@ type authorChannel struct {
 	Error  error
 }
 
+// Initialize the article service
 func NewArticleService(a article.ArticleRepository, ar author.AuthorRepository, time time.Duration) article.ArticleService {
 	return &articleService{
 		articleRepos:   a,
@@ -28,6 +29,7 @@ func NewArticleService(a article.ArticleRepository, ar author.AuthorRepository, 
 		contextTimeout: time,
 	}
 }
+
 
 func (service *articleService) getAuthorDetail(ctx context.Context, item *models.Article, authorChan chan authorChannel) {
 	res, err := service.authorRepo.GetById(ctx, item.Author.ID)
@@ -86,6 +88,7 @@ func (service *articleService) getAuthorDetails(ctx context.Context, data []*mod
 	return data, nil
 }
 
+// Fetch the Article by the pagination parameters
 func (service *articleService) Fetch(ctx context.Context, cursor string, num int64) ([]*models.Article, string, error) {
 	if num == 0 {
 		num = 10

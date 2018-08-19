@@ -12,8 +12,8 @@ type SQL struct {
 	initial.SQLInstance
 }
 
+// Init the database schema
 func (s SQL) InitSchema() {
-	fmt.Println("called")
 	result, err := s.DB.Exec("create table if not exists user (id INTEGER PRIMARY KEY AUTOINCREMENT, name varchar(255) ); ")
 
 	if err != nil {
@@ -23,9 +23,9 @@ func (s SQL) InitSchema() {
 	fmt.Println(result)
 }
 
+// Create a user
 func (s SQL) CreateUser(u *models.User) error {
 
-	//Validate the input.
 	if u == nil {
 		return errors.New("user required")
 	} else if u.Name == "" {
@@ -41,6 +41,7 @@ func (s SQL) CreateUser(u *models.User) error {
 
 }
 
+// Batch create users in a batch mode
 func (s SQL) CreateUsers(users []*models.User) error {
 
 	//Validate the input.

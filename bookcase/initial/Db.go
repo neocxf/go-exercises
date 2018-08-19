@@ -2,15 +2,15 @@ package initial
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"fmt"
-	"time"
 	"log"
+	"time"
+
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-
 type SQL interface {
-	Open(string)  (disconnect func())
+	Open(string, string) (disconnect func())
 	Begin() error
 	Close() error
 }
@@ -22,7 +22,7 @@ type SQLInstance struct {
 
 //// Open returns a DB reference for a data source.
 func (s *SQLInstance) Open(driverName, dataSourceName string) (disconnect func()) {
-	db, err := sql.Open("mysql", dataSourceName)
+	db, err := sql.Open(driverName, dataSourceName)
 	if err != nil {
 		fmt.Printf(err.Error())
 		return func() {
