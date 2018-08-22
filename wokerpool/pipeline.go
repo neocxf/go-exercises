@@ -32,6 +32,7 @@ func sq(done <-chan struct{}, in <-chan int) <-chan int {
 			select {
 			case out <- n * n:
 			case <-done:
+				fmt.Println("sq done called")
 				return
 			}
 		}

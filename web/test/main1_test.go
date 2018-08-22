@@ -236,6 +236,45 @@ func TestUnboundedAndSend2WithRangeAnd2GoRoutineAndProducerSlow(t *testing.T) {
 	}
 }
 
+func TestP_C(t *testing.T) {
+	synChan := make(chan int, 5)
+	strChan := make(chan string, 4)
+
+	var wg sync.WaitGroup
+
+	wg.Add(5)
+	for i := 0; i < 5; i++ {
+		go func(i int) {
+			for elem := range strChan {
+				fmt.Println("recieve task: ", elem)
+			}
+
+			fmt.Printf("[reciever] %d task done\n", i)
+			synChan <- i
+
+			wg.Done()
+		}(i)
+	}
+
+	go func() {
+		for _, elem := range []string{"a", "b", "c", "d", "e", "f"} {
+			strChan <- elem
+			fmt.Printf("send: %s to [receiver]\n", elem)
+		}
+
+		close(strChan)
+	}()
+
+	wg.Wait()
+
+	close(synChan)
+
+	for v := range synChan {
+		_ = v
+	}
+
+}
+
 func TestUnboundedAndSend2WithForAnd2GoRoutineAndProducerSlow(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		queue := make(chan int)
@@ -274,31 +313,109 @@ func TestUnboundedAndSend2WithForAnd2GoRoutineAndProducerSlow(t *testing.T) {
 
 func TestUnboundedAndSend2WithSelectAnd2GoRoutineAndProducerSlow(t *testing.T) {
 	queue := make(chan int)
-	quitCh := make(chan struct{})
+
+	var wg sync.WaitGroup
+	var wg2 sync.WaitGroup
+
+	wg.Add(1)
 
 	go func() {
+		defer wg.Done()
+
 		for {
-			select {
-			case elem := <-queue:
-				fmt.Println(elem)
-			case <-quitCh:
+			if i, ok := <-queue; ok {
+				fmt.Println(i)
+			} else {
 				break
 			}
 		}
 
 	}()
 
-	go func() {
-		for i := 0; i < 4; i++ {
+	wg2.Add(5)
+	for i := 0; i < 5; i++ {
+		go func(i int) {
+			defer wg2.Done()
 			queue <- i
-			//time.Sleep(time.Second)
-		}
-		//close(queue)
+		}(i)
+
+	}
+
+	go func() {
+		wg2.Wait()
+		close(queue)
 	}()
 
-	time.Sleep(time.Second)
+	wg.Wait()
 
-	quitCh <- struct{}{}
+}
+
+func TestP_C_no_wg(t *testing.T) {
+	c := make(chan int)
+	signal := make(chan bool)
+
+	for i := 0; i < 10; i++ {
+		go func(c chan int, signal chan bool) {
+
+			c <- rand.Intn(10)
+
+			signal <- true
+
+		}(c, signal)
+	}
+
+	go func() {
+		for {
+			if elem, ok := <-c; ok {
+				fmt.Println(elem)
+			} else {
+				return
+			}
+		}
+	}()
+
+	for i := 0; i < 10; i++ {
+		<-signal
+	}
+
+}
+
+// without waitGroup, we have to know the exact number of go-routines we spawn
+func TestC_P_no_wg(t *testing.T) {
+	c := make(chan string) // make the chan unbuffered
+	signal := make(chan bool)
+
+	for i := 0; i < 10; i++ {
+		go func(c chan string, signal chan bool) {
+
+			defer func() {
+				signal <- true
+			}()
+
+			for {
+				if elem, ok := <-c; ok {
+					fmt.Println("doing task: ", elem)
+				} else {
+					return
+				}
+			}
+
+		}(c, signal)
+	}
+
+	go func() {
+		for _, elem := range []string{"a", "b", "c", "d", "e", "f"} {
+			fmt.Printf("send: %s to [receiver]\n", elem)
+			c <- elem
+		}
+
+		close(c)
+	}()
+
+	for i := 0; i < 10; i++ { // as we know the number of go-routine we spawn, we just drain the chan
+		<-signal
+	}
+
 }
 
 func TestProducerAndConsumer(t *testing.T) {
@@ -569,6 +686,74 @@ func TestProducerAndConsumerUsingWaitGroup(t *testing.T) {
 	consumer_wg.Wait()
 
 	fmt.Println("all done.")
+
+}
+
+func TestWaitSomethingFinish(t *testing.T) {
+	done := make(chan struct{})
+
+	go func() {
+		time.Sleep(time.Second)
+		done <- struct{}{}
+	}()
+
+	fmt.Println("go routine executing ...")
+
+	<-done
+
+	fmt.Println("go routine done")
+}
+
+func TestStartThingsAtSameTime(t *testing.T) {
+	start := make(chan struct{})
+
+	wg.Add(1000)
+	for i := 0; i < 1000; i++ {
+		go func(i int) {
+			defer wg.Done()
+			<-start
+
+			fmt.Println(i)
+		}(i)
+	}
+
+	fmt.Println("kick start all the process ...")
+
+	close(start)
+
+	wg.Wait()
+}
+
+func TestStopChannelBySignal(t *testing.T) {
+	dataChan := make(chan int)
+	stopChan := make(chan struct{})
+
+	wg.Add(1)
+
+	go func() {
+		for i := 0; i < 10; i++ {
+			dataChan <- i
+		}
+
+		stopChan <- struct{}{}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+	loop:
+		for {
+			select {
+			case m := <-dataChan:
+				fmt.Println(m)
+			case <-stopChan:
+				break loop
+			}
+		}
+
+	}()
+
+	wg.Wait()
 
 }
 

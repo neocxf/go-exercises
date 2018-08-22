@@ -62,15 +62,17 @@ func TestOut(t *testing.T) {
 	done := make(chan struct{})
 	defer close(done)
 
-	sq1 := sq2(in)
-	sq2 := sq2(in)
+	sq1 := sq(done, in)
+	sq2 := sq(done, in)
 
 	out := merge(done, sq1, sq2)
 
 	fmt.Println(<-out)
 	fmt.Println(<-out)
+	//fmt.Println(<-out)
 
 	done <- struct{}{}
+
 }
 
 func TestMD5All(t *testing.T) {
